@@ -1,50 +1,59 @@
-// Function to simulate plagiarism check with better text matching logic
+// Function to simulate plagiarism check with substring matching logic
 function checkPlagiarism() {
-    const text1 = document.getElementById('text1').value;
-    const text2 = document.getElementById('text2').value;
+    const text1 = document.getElementById('text1').value.trim();
+    const text2 = document.getElementById('text2').value.trim();
 
     if (text1 === '' || text2 === '') {
         alert('Please fill both text fields!');
         return;
     }
 
-    // Clean up and prepare the texts by splitting them into words
-    const words1 = text1.split(/\s+/).map(word => word.toLowerCase());
-    const words2 = text2.split(/\s+/).map(word => word.toLowerCase());
+    // Calculate the percentage of matching content
+    const matchResult = calculateMatchingPercentage(text1, text2);
 
-    // Calculate common words between both texts
-    let commonWordsCount = 0;
-
-    words1.forEach(word1 => {
-        if (words2.includes(word1)) {
-            commonWordsCount++;
-        }
-    });
-
-    // Calculate the percentage of matching words
-    const totalWords = Math.max(words1.length, words2.length);
-    const similarityPercentage = (commonWordsCount / totalWords) * 100;
-
-    // Display similarity result
+    // Display the similarity result
     const similarityText = document.getElementById('similarity');
-    similarityText.textContent = `Similarity: ${similarityPercentage.toFixed(2)}%`;
+    similarityText.textContent = `Similarity: ${matchResult.percentage.toFixed(2)}%`;
 
-    // Optionally, you can display the matched words or content as well
-    const matchedText = getMatchedText(words1, words2);
-    if (matchedText.length > 0) {
-        document.getElementById('matched-text').textContent = `Matched Text: ${matchedText.join(' ')}`;
-    } else {
-        document.getElementById('matched-text').textContent = 'No exact matched content found.';
-    }
+    // Display the matched content
+    const matchedText = document.getElementById('matched-text');
+    matchedText.textContent = `Matched Text: ${matchResult.matchedText || 'No exact matched content found.'}`;
 }
 
-// Function to find and return matched content (for display purposes)
-function getMatchedText(words1, words2) {
-    const matched = [];
+// Function to calculate the percentage of matching content
+function calculateMatchingPercentage(text1, text2) {
+    // Normalize the case and compare content by finding common substrings
+    const words1 = text1.split(/\s+/);
+    const words2 = text2.split(/\s+/);
+
+    let matchedText = '';
+    let commonWordCount = 0;
+    let totalMatchedLength = 0;
+    let totalLength = 0;
+
+    // Loop through the words and compare them
     words1.forEach(word1 => {
-        if (words2.includes(word1)) {
-            matched.push(word1);
-        }
+        words2.forEach(word2 => {
+            // Check for substring matches (e.g., "j" matches with "j1")
+            if (word2.includes(word1) || word1.includes(word2)) {
+                matchedText += word1 + ' ';
+                totalMatchedLength += word1.length;  // Add length of the matched word
+                commonWordCount++;
+            }
+        });
     });
-    return matched;
+
+    // Calculate the total length of both texts
+    totalLength = text1.length + text2.length;
+
+    // Calculate the match percentage based on matched content
+    let matchPercentage = 0;
+    if (totalLength > 0) {
+        matchPercentage = (totalMatchedLength / totalLength) * 100;
+    }
+
+    return {
+        percentage: matchPercentage,
+        matchedText: matchedText.trim()
+    };
 }
